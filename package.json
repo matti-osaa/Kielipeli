@@ -1,0 +1,15 @@
+{
+  "name": "kielen-oppiminen",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tutkimuspohjainen kielen oppimispeli (en/fi/sv) — galaksinäkymä, SRS, harjoitukset, keskustelu.",
+  "scripts": {
+    "start": "serve -s . -l ${PORT:-8080} --no-clipboard"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

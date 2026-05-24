@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>Kielen oppiminen</title>
+  <style>
+    /* =========================================================
+       Pohja, väripaletti, typografia — Claude-henkinen tumma
+       ========================================================= */
+    :root {
+      --bg-0: #0a0a0f;
+      --bg-1: #11121a;
+      --bg-2: #1a1c28;
+      --bg-3: #232636;
+      --line: rgba(255,255,255,0.08);
+      --line-strong: rgba(255,255,255,0.18);
+      --text: #e8eaf0;
+      --text-soft: #aab0c0;
+      --text-dim: #6b7387;
+      --accent: #c89bff;        /* Claude-tyylinen violetti */
+      --accent-2: #8b5cf6;
+      --accent-soft: rgba(200,155,255,0.14);
+      --success: #6ee7b7;
+      --error: #fca5a5;
+      --warn: #fcd34d;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --radius-lg: 20px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background:
+        radial-gradient(ellipse at 20% 0%, rgba(139,92,246,0.10), transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(56,189,248,0.08), transparent 50%),
+        var(--bg-0);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+    button, input, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+
+    /* =========================================================
+       Sovelluskuori
+       ========================================================= */
+    #app {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      grid-template-rows: 100vh;
+      height: 100vh;
+      height: 100dvh;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    @media (max-width: 720px) {
+      #app { grid-template-columns: 1fr; grid-template-rows: 1fr 64px; }
+    }
+
+    /* ---------- Sivunavigaatio (desktop) ---------- */
+    .nav {
+      background: var(--bg-1);
+      border-right: 1px solid var(--line);
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+    }
+    .nav .brand {
+      font-weight: 700;
+      font-size: 18px;
+      padding: 8px 12px 18px;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav .brand .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 14px var(--accent);
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      color: var(--text-soft);
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover { background: var(--bg-2); color: var(--text); }
+    .nav-item.active { background: var(--accent-soft); color: var(--text); }
+    .nav-item .icon {
+      width: 20px; height: 20px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .nav-section-label {
+      padding: 14px 12px 6px;
+      font-size: 11px;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .nav-foot {
+      margin-top: auto;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* ---------- Alanavigaatio (mobiili) ---------- */
+    .bottom-nav {
+      display: none;
+      background: var(--bg-1);
+      border-top: 1px solid var(--line);
+      align-items: stretch;
+    }
+    .bottom-nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-size: 10px;
+      color: var(--text-dim);
+      padding: 6px 4px;
+    }
+    .bottom-nav-item.active { color: var(--accent); }
+    .bottom-nav-item .icon { font-size: 18px; }
+    @media (max-width: 720px) {
+      .nav { display: none; }
+      .bottom-nav { display: flex; }
+    }
+
+    /* ---------- Päänäkymä ---------- */
+    .main {
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+    }
+    .screen {
+      display: none;
+      padding: 32px 32px 80px;
+      max-width: 900px;
+      margin: 0 auto;
+      animation: fadeIn 0.25s ease;
+    }
+    .screen.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 720px) {
+      .screen { padding: 20px 18px 32px; }
+    }
+
+    h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -0.8px; font-weight: 700; }
+    h2 { font-size: 22px; margin: 28px 0 14px; letter-spacing: -0.4px; font-weight: 600; }
+    h3 { font-size: 16px; margin: 0 0 8px; font-weight: 600; }
+    p  { line-height: 1.55; color: var(--text-soft); margin: 0 0 12px; }
+    .muted { color: var(--text-dim); font-size: 13px; }
+    .label-cap { font-size: 11px; letter-spacing: 1.2px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; }
+
+    /* ---------- Kortit ---------- */
+    .card {
+      background: var(--bg-1);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .card.hover:hover { border-color: var(--line-strong); background: var(--bg-2); cursor: pointer; }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    /* ---------- Painikkeet ---------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 18px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-2);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid var(--line);
+      transition: background 0.12s, transform 0.08s, border-color 0.12s;
+    }
+    .btn:hover { background: var(--bg-3); border-color: var(--line-strong); }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: #1c0d33; border-color: transparent; }
+    .btn-primary:hover { background: #d6b0ff; }
+    .btn-ghost { background: transparent; border-color: var(--line); }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .btn-lg { padding: 14px 22px; font-size: 15px; }
+    .btn-full { width: 100%; }
+    .btn-icon {
+      width: 40px; height: 40px; padding: 0; border-radius: var(--radius-sm);
+    }
+
+    /* ---------- Lomakekentät ---------- */
+    .input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-1);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .input:focus { border-color: var(--accent); background: var(--bg-2); }
+
+    select.input {
+      appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><polyline points='0,0 6,8 12,0' stroke='%23aab0c0' stroke-width='2' fill='none'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
+    }
+
+    /* ---------- Tilarivit ---------- */
+    .stat-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .stat-pill {
+      flex: 1;
+      min-width: 140px;
+      background: var(--bg-1);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+    }
+    .stat-pill .num { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+    .stat-pill .lbl { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+
+    /* ---------- Progress ---------- */
+    .progress {
+      height: 6px;
+      background: var(--bg-2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress .bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 0.3s ease;
+    }
+
+    /* ---------- Pikatoimintojen rivi etusivulla ---------- */
+    .quick {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .quick .card { padding: 18px; cursor: pointer; }
+    .quick .card .emoji { font-size: 28px; margin-bottom: 8px; }
+    .quick .card .ti { font-weight: 600; }
+    .quick .card .su { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+    /* =========================================================
+       Galaksinäkymä
+       ========================================================= */
+    .galaxy-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      max-height: 70vh;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        radial-gradient(ellipse at 30% 30%, rgba(139,92,246,0.06), transparent 60%),
+        radial-gradient(ellipse at 70% 70%, rgba(56,189,248,0.05), transparent 60%),
+        var(--bg-1);
+      overflow: hidden;
+    }
+    #galaxy-svg {
+      width: 100%; height: 100%;
+      display: block;
+      cursor: grab;
+    }
+    #galaxy-svg:active { cursor: grabbing; }
+    .galaxy-legend {
+      margin-top: 14px;
+      display: flex; flex-wrap: wrap; gap: 8px;
+      font-size: 12px;
+    }
+    .legend-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
+      background: var(--bg-1);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .legend-chip:hover { background: var(--bg-2); }
+    .legend-chip .swatch { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* Sanakortti (modal) */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center; justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--bg-1);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: var(--shadow);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal h3 { font-size: 22px; margin: 0 0 4px; }
+    .modal .pos-pill {
+      display: inline-block;
+      padding: 3px 10px;
+      background: var(--bg-3);
+      border-radius: 999px;
+      font-size: 11px;
+      color: var(--text-soft);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .modal .lang-row {
+      display: grid;
+      grid-template-columns: 50px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .modal .lang-row:last-child { border-bottom: none; }
+    .modal .flag { font-size: 18px; }
+    .modal .word-big { font-size: 18px; font-weight: 600; }
+    .modal .ex { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+
+    /* =========================================================
+       Harjoitusnäkymä
+       ========================================================= */
+    .exercise-card {
+      background: var(--bg-1);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+    .ex-prompt {
+      font-size: 13px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .ex-word {
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 6px;
+    }
+    .ex-context {
+      font-size: 14px;
+      color: var(--text-soft);
+      margin-bottom: 20px;
+    }
+    .choice-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .choice {
+      padding: 14px 18px;
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      text-align: left;
+      font-size: 15px;
+      transition: background 0.12s, border-color 0.12s, transform 0.08s;
+    }
+    .choice:hover { background: var(--bg-3); border-color: var(--line-strong); }
+    .choice:active { transform: scale(0.99); }
+    .choice.correct { background: rgba(110,231,183,0.12); border-color: var(--success); color: var(--success); }
+    .choice.wrong   { background: rgba(252,165,165,0.12); border-color: var(--error); color: var(--error); }
+
+    .feedback {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      display: none;
+    }
+    .feedback.show { display: block; }
+    .feedback.ok  { background: rgba(110,231,183,0.10); border: 1px solid rgba(110,231,183,0.3); color: var(--success); }
+    .feedback.no  { background: rgba(252,165,165,0.10); border: 1px solid rgba(252,165,165,0.3); color: var(--error); }
+
+    .tile-row {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      min-height: 60px;
+      padding: 10px;
+      background: var(--bg-2);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+    }
+    .tile {
+      padding: 8px 14px;
+      background: var(--bg-3);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 14px;
+      transition: transform 0.08s, background 0.12s;
+    }
+    .tile:hover { background: var(--bg-2); }
+    .tile:active { transform: scale(0.95); }
+
+    /* =========================================================
+       Keskustelunäkymä
+       ========================================================= */
+    .chat {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .bubble {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.45;
+      animation: bubbleIn 0.25s ease;
+    }
+    @keyframes bubbleIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .bubble.bot {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+    }
+    .bubble.user {
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      border-bottom-right-radius: 4px;
+      align-self: flex-end;
+    }
+    .bubble .translation {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      border-top: 1px solid var(--line);
+      padding-top: 6px;
+    }
+
+    /* ---------- Apuluokat ---------- */
+    .row { display: flex; gap: 10px; align-items: center; }
+    .row.wrap { flex-wrap: wrap; }
+    .grow { flex: 1; }
+    .mt-4 { margin-top: 4px; } .mt-8 { margin-top: 8px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; }
+    .center { text-align: center; }
+    .hidden { display: none !important; }
+
+    /* Tooltip pallon päällä */
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: var(--bg-3);
+      border: 1px solid var(--line-strong);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text);
+      transform: translate(-50%, -120%);
+      opacity: 0;
+      transition: opacity 0.12s;
+      white-space: nowrap;
+    }
+    .tooltip.show { opacity: 1; }
+
+    /* Mikrofonin kuuntelutila */
+    .mic-pulse {
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(200,155,255,0.6); }
+      50%      { box-shadow: 0 0 0 12px rgba(200,155,255,0); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- ===== Sivunavigaatio ===== -->
+    <nav class="nav" id="side-nav">
+      <div class="brand">
+        <span class="dot"></span>
+        Kielen oppiminen
+      </div>
+      <div class="nav-section-label">Etusivu</div>
+      <button class="nav-item" data-screen="home">
+        <span class="icon">🏠</span> Tänään
+      </button>
+
+      <div class="nav-section-label">Tutki kieltä</div>
+      <button class="nav-item" data-screen="galaxy">
+        <span class="icon">🌌</span> Sanasto-galaksi
+      </button>
+      <button class="nav-item" data-screen="grammar">
+        <span class="icon">🧬</span> Kielen rakenne
+      </button>
+
+      <div class="nav-section-label">Harjoitus</div>
+      <button class="nav-item" data-screen="practice">
+        <span class="icon">✏️</span> Harjoittele
+      </button>
+      <button class="nav-item" data-screen="speak">
+        <span class="icon">🎙️</span> Lue ääneen
+      </button>
+      <button class="nav-item" data-screen="conversation">
+        <span class="icon">💬</span> Keskustele
+      </button>
+
+      <div class="nav-section-label">Muut</div>
+      <button class="nav-item" data-screen="stats">
+        <span class="icon">📊</span> Edistyminen
+      </button>
+      <button class="nav-item" data-screen="settings">
+        <span class="icon">⚙️</span> Asetukset
+      </button>
+
+      <div class="nav-foot" id="nav-foot">
+        <div id="nav-langpair">en → fi</div>
+        <div class="mt-4" id="nav-words">– sanaa</div>
+      </div>
+    </nav>
+
+    <main class="main">
+      <!-- ============ Etusivu ============ -->
+      <section class="screen" id="screen-home">
+        <h1>Tervetuloa takaisin</h1>
+        <p class="muted" id="home-sub">Aloita päivän treeni tai sukella galaksiin.</p>
+
+        <div class="stat-row mt-24">
+          <div class="stat-pill"><div class="num" id="stat-mastered">0</div><div class="lbl">Hallittu</div></div>
+          <div class="stat-pill"><div class="num" id="stat-learning">0</div><div class="lbl">Opettelussa</div></div>
+          <div class="stat-pill"><div class="num" id="stat-streak">0</div><div class="lbl">Putki (pv)</div></div>
+          <div class="stat-pill"><div class="num" id="stat-due">0</div><div class="lbl">Kerrattavaa</div></div>
+        </div>
+
+        <h2>Päivän treeni</h2>
+        <div class="card hover" id="daily-session" style="background: linear-gradient(135deg, var(--bg-1), var(--bg-2)); border-color: var(--line-strong);">
+          <div class="row" style="justify-content: space-between;">
+            <div>
+              <h3>10 minuutin sessio</h3>
+              <p class="muted" style="margin: 4px 0 0;">Sekoitettu kertaus, uudet sanat ja tuottoharjoitukset.</p>
+            </div>
+            <button class="btn btn-primary btn-lg" id="start-daily">Aloita →</button>
+          </div>
+        </div>
+
+        <div class="card hover mt-16" id="grammar-tip" style="border-color: var(--line-strong);">
+          <div class="row" style="justify-content: space-between; align-items: flex-start;">
+            <div style="flex:1;">
+              <div class="label-cap">Päivän kielioppi</div>
+              <h3 id="grammar-tip-title" style="margin-top:4px;">—</h3>
+              <p class="muted" id="grammar-tip-desc" style="margin: 4px 0 0;">—</p>
+              <div class="muted mt-8" id="grammar-tip-progress" style="font-size:12px;"></div>
+            </div>
+            <button class="btn btn-primary" id="grammar-tip-go">Harjoittele →</button>
+          </div>
+        </div>
+
+        <h2>Pika-aloitus</h2>
+        <div class="quick">
+          <div class="card hover" data-quick="recognition">
+            <div class="emoji">🔎</div>
+            <div class="ti">Tunnista sana</div>
+            <div class="su">Monivalinta, helppo aloittaa</div>
+          </div>
+          <div class="card hover" data-quick="production">
+            <div class="emoji">⌨️</div>
+            <div class="ti">Kirjoita käännös</div>
+            <div class="su">Tuotto vahvistaa muistia</div>
+          </div>
+          <div class="card hover" data-quick="arrange">
+            <div class="emoji">🧩</div>
+            <div class="ti">Järjestä lause</div>
+            <div class="su">Tartu rakenteeseen</div>
+          </div>
+          <div class="card hover" data-quick="listen">
+            <div class="emoji">🔊</div>
+            <div class="ti">Kuule ja valitse</div>
+            <div class="su">Korva tarkennukseen</div>
+          </div>
+          <div class="card hover" data-quick="speak">
+            <div class="emoji">🎙️</div>
+            <div class="ti">Lue ääneen</div>
+            <div class="su">Mikrofoni arvioi ääntämisen</div>
+          </div>
+          <div class="card hover" data-quick="conv">
+            <div class="emoji">💬</div>
+            <div class="ti">Keskustele</div>
+            <div class="su">Käytä oppimaasi</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Galaksi ============ -->
+      <section class="screen" id="screen-galaxy">
+        <h1>Kielen galaksi</h1>
+        <p class="muted">Jokainen pallo on yksi sana. Klusterit ovat aihepiirejä. Mitä isompi ja kirkkaampi pallo, sitä paremmin hallitset sen. Klikkaa palloa nähdäksesi tarkemmin tai harjoitellaksesi.</p>
+        <div class="galaxy-wrap mt-16">
+          <svg id="galaxy-svg" viewBox="0 0 1000 750" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="tooltip" id="galaxy-tip"></div>
+        </div>
+        <div class="galaxy-legend" id="galaxy-legend"></div>
+      </section>
+
+      <!-- ============ Kielen rakenne (kielioppipuu) ============ -->
+      <section class="screen" id="screen-grammar">
+        <h1>Kielen rakenne</h1>
+        <p class="muted" id="grammar-desc">Klikkaa solmua avataksesi tai sulkeaksesi haaran, tai katso oikealla tarkat säännöt, esimerkit ja aloita harjoitus.</p>
+        <div id="grammar-tree" class="mt-16"></div>
+      </section>
+
+      <!-- ============ Harjoitus ============ -->
+      <section class="screen" id="screen-practice">
+        <h1>Harjoittele</h1>
+        <p class="muted">Valitse harjoituksen tyyppi ja aihepiiri tai jätä tyhjäksi sekoitetuksi sessioksi.</p>
+
+        <div class="row wrap mt-16" style="gap:10px;">
+          <select class="input" id="filter-topic" style="max-width:240px;">
+            <option value="">Kaikki aihepiirit</option>
+          </select>
+          <select class="input" id="filter-type" style="max-width:240px;">
+            <option value="mix">Sekoita</option>
+            <option value="recognition">Tunnistus (monivalinta)</option>
+            <option value="production">Kirjoita käännös</option>
+            <option value="reverse">Käännä toiseen suuntaan</option>
+            <option value="arrange">Järjestä lause</option>
+            <option value="listen">Kuule ja valitse</option>
+          </select>
+          <button class="btn btn-primary" id="start-practice">Aloita harjoitus</button>
+        </div>
+
+        <div id="practice-area" class="mt-24 hidden">
+          <div class="exercise-card" id="exercise-card"></div>
+          <div class="row mt-16">
+            <div class="grow">
+              <div class="progress"><div class="bar" id="ex-progress"></div></div>
+            </div>
+            <div class="muted" id="ex-progress-text" style="min-width:60px; text-align:right;">0 / 0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Lue ääneen ============ -->
+      <section class="screen" id="screen-speak">
+        <h1>Lue ääneen</h1>
+        <p class="muted">Mikrofonia käytetään selaimen omalla puheentunnistuksella. Toimii parhaiten Chromessa.</p>
+        <div id="speak-area" class="exercise-card mt-16"></div>
+      </section>
+
+      <!-- ============ Keskustelu ============ -->
+      <section class="screen" id="screen-conversation">
+        <h1>Keskustele</h1>
+        <p class="muted">Aloittelijoille valmiiksi käsikirjoitetut dialogit. Edistyneille vapaa keskustelu LLM:n kanssa (vaatii API-avaimen Asetuksista).</p>
+
+        <h2>Käsikirjoitetut dialogit</h2>
+        <div class="card-grid" id="dialogue-list"></div>
+
+        <h2>Vapaa keskustelu</h2>
+        <div class="card">
+          <p class="muted" style="margin-top:0">Aloita vapaa keskustelu opettelemallasi kielellä. Botti pysyy tasollasi ja korjaa virheet lopussa.</p>
+          <div class="row wrap" style="gap:10px;">
+            <select class="input" id="free-topic" style="max-width:280px;">
+              <option value="general">Yleinen rupatelu</option>
+              <option value="cafe">Kahvilassa</option>
+              <option value="travel">Matkalla</option>
+              <option value="hobby">Harrastukset</option>
+              <option value="work">Työ ja opiskelu</option>
+            </select>
+            <button class="btn btn-primary" id="start-free">Aloita vapaa keskustelu</button>
+          </div>
+        </div>
+
+        <div id="conversation-area" class="mt-24 hidden">
+          <div class="chat" id="chat-log"></div>
+          <div class="row mt-8" id="dialogue-choices"></div>
+          <div class="row mt-8 hidden" id="free-input">
+            <input class="input grow" id="free-text" placeholder="Kirjoita vastauksesi…" />
+            <button class="btn btn-icon" id="free-mic" title="Puhu">🎙️</button>
+            <button class="btn btn-primary" id="free-send">Lähetä</button>
+          </div>
+          <button class="btn btn-ghost mt-16" id="end-conversation">Lopeta keskustelu</button>
+        </div>
+      </section>
+
+      <!-- ============ Edistyminen ============ -->
+      <section class="screen" id="screen-stats">
+        <h1>Edistyminen</h1>
+        <div class="stat-row mt-16">
+          <div class="stat-pill"><div class="num" id="s-mastered">0</div><div class="lbl">Hallittu</div></div>
+          <div class="stat-pill"><div class="num" id="s-learning">0</div><div class="lbl">Opettelussa</div></div>
+          <div class="stat-pill"><div class="num" id="s-new">0</div><div class="lbl">Uusia jäljellä</div></div>
+          <div class="stat-pill"><div class="num" id="s-streak">0</div><div class="lbl">Putki</div></div>
+        </div>
+
+        <h2>Kattavuus aihepiireittäin</h2>
+        <div id="topic-progress"></div>
+
+        <h2>Sessio-historia</h2>
+        <div class="card"><p class="muted" id="session-history">Ei vielä historiaa.</p></div>
+      </section>
+
+      <!-- ============ Asetukset ============ -->
+      <section class="screen" id="screen-settings">
+        <h1>Asetukset</h1>
+
+        <h2>Kielipari</h2>
+        <p class="muted">Mitä kieltä opettelet ja minkä kielen kautta?</p>
+        <div class="row wrap mt-8" style="gap:10px;">
+          <div class="grow" style="min-width:200px;">
+            <div class="label-cap">Opin kieltä</div>
+            <select class="input mt-4" id="set-target">
+              <option value="en">englantia</option>
+              <option value="sv">ruotsia</option>
+              <option value="fi">suomea</option>
+            </select>
+          </div>
+          <div class="grow" style="min-width:200px;">
+            <div class="label-cap">Lähtökielenä</div>
+            <select class="input mt-4" id="set-source">
+              <option value="fi">suomi</option>
+              <option value="en">englanti</option>
+              <option value="sv">ruotsi</option>
+            </select>
+          </div>
+        </div>
+
+        <h2>Vapaa keskustelu (LLM)</h2>
+        <p class="muted">Vapaa keskustelu käyttää Anthropic-API:a. Avain tallentuu vain selaimeesi (localStorage).</p>
+        <input class="input mt-8" id="set-apikey" type="password" placeholder="sk-ant-…" />
+        <div class="muted mt-8" style="font-size:12px;">Tyhjäksi jättäminen estää LLM-keskustelun. Tämä on käyttäjäkohtaista, ei lähetetä mihinkään muualle.</div>
+
+        <h2>Varmuuskopio</h2>
+        <p class="muted">Tallenna edistymisesi tiedostoksi, jotta selaimen tyhjennys tai laitteen vaihto ei pyyhi sitä. Tiedostossa on putki, hallitut sanat, kielioppisolmujen edistyminen ja sessio-historia.</p>
+        <div class="row mt-8" style="gap:10px; flex-wrap: wrap;">
+          <button class="btn" id="export-progress">⬇️ Vie edistyminen</button>
+          <button class="btn" id="import-progress-btn">⬆️ Tuo edistyminen</button>
+          <input type="file" id="import-progress" accept="application/json,.json" style="display:none;" />
+        </div>
+        <label class="muted mt-8" style="display:block; font-size:12px; cursor:pointer;">
+          <input type="checkbox" id="export-include-key" style="vertical-align: middle;" />
+          Sisällytä API-avain vientiin (oletuksena pois — turvallisempi jakaa)
+        </label>
+        <div id="import-status" class="muted mt-8" style="font-size:12px;"></div>
+
+        <h2>Vaarallinen vyöhyke</h2>
+        <button class="btn btn-ghost" id="reset-progress">Nollaa edistyminen</button>
+      </section>
+    </main>
+
+    <!-- ===== Alanavigaatio mobiili ===== -->
+    <nav class="bottom-nav">
+      <button class="bottom-nav-item" data-screen="home"><span class="icon">🏠</span>Tänään</button>
+      <button class="bottom-nav-item" data-screen="galaxy"><span class="icon">🌌</span>Sanasto</button>
+      <button class="bottom-nav-item" data-screen="grammar"><span class="icon">🧬</span>Rakenne</button>
+      <button class="bottom-nav-item" data-screen="practice"><span class="icon">✏️</span>Harjoitus</button>
+      <button class="bottom-nav-item" data-screen="conversation"><span class="icon">💬</span>Chat</button>
+    </nav>
+  </div>
+
+  <!-- ===== Modal sanakortille ===== -->
+  <div class="modal-backdrop" id="modal-back">
+    <div class="modal" id="modal">
+      <div class="row" style="justify-content: space-between; align-items: flex-start;">
+        <div>
+          <span class="pos-pill" id="m-pos">verbi</span>
+          <h3 id="m-title">word</h3>
+          <div class="muted" id="m-topic">aihepiiri</div>
+        </div>
+        <button class="btn btn-icon btn-ghost" id="m-close" aria-label="Sulje">✕</button>
+      </div>
+      <div class="mt-16">
+        <div class="lang-row">
+          <span class="flag">🇬🇧</span>
+          <div>
+            <div class="word-big" id="m-en">–</div>
+            <div class="ex" id="m-ex-en">–</div>
+          </div>
+          <div class="row" style="gap:4px;">
+            <button class="btn btn-icon btn-ghost" data-speak="en" title="Kuule sana">🔊</button>
+            <button class="btn btn-icon btn-ghost" data-speak-ex="en" title="Kuule esimerkkilause">📢</button>
+          </div>
+        </div>
+        <div class="lang-row">
+          <span class="flag">🇫🇮</span>
+          <div>
+            <div class="word-big" id="m-fi">–</div>
+            <div class="ex" id="m-ex-fi">–</div>
+          </div>
+          <div class="row" style="gap:4px;">
+            <button class="btn btn-icon btn-ghost" data-speak="fi" title="Kuule sana">🔊</button>
+            <button class="btn btn-icon btn-ghost" data-speak-ex="fi" title="Kuule esimerkkilause">📢</button>
+          </div>
+        </div>
+        <div class="lang-row">
+          <span class="flag">🇸🇪</span>
+          <div>
+            <div class="word-big" id="m-sv">–</div>
+            <div class="ex" id="m-ex-sv">–</div>
+          </div>
+          <div class="row" style="gap:4px;">
+            <button class="btn btn-icon btn-ghost" data-speak="sv" title="Kuule sana">🔊</button>
+            <button class="btn btn-icon btn-ghost" data-speak-ex="sv" title="Kuule esimerkkilause">📢</button>
+          </div>
+        </div>
+      </div>
+      <div class="row mt-16" style="gap:8px;">
+        <button class="btn btn-primary grow" id="m-practice">Harjoittele tätä</button>
+        <button class="btn btn-ghost" id="m-mark">Merkitse hallituksi</button>
+      </div>
+      <div class="muted mt-16" id="m-progress" style="font-size:12px;">SRS: – / Hallinta: –</div>
+    </div>
+  </div>
+
+  <!-- Datatiedostot -->
+  <script src="data/words.js"></script>
+  <script src="data/topics.js"></script>
+  <script src="data/words_ext.js"></script>
+  <script src="data/words_ext2.js"></script>
+  <script src="data/dialogues.js"></script>
+  <script src="data/grammar_en.js"></script>
+  <script src="data/grammar_sv.js"></script>
+  <script src="data/grammar_fi.js"></script>
+  <!-- Moottorit -->
+  <script src="js/state.js"></script>
+  <script src="js/srs.js"></script>
+  <script src="js/speech.js"></script>
+  <script src="js/exercises.js"></script>
+  <script src="js/galaxy.js"></script>
+  <script src="js/grammar.js"></script>
+  <script src="js/tree.js"></script>
+  <script src="js/conversation.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
