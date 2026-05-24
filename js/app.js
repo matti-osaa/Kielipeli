@@ -39,6 +39,10 @@
     });
     $$(".nav-item").forEach(b => b.classList.toggle("active", b.dataset.screen === screen));
     $$(".bottom-nav-item").forEach(b => b.classList.toggle("active", b.dataset.screen === screen));
+    // Lisää-painike aktiivinen kun ollaan piilotetussa näkymässä
+    const hiddenScreens = ["speak", "conversation", "stats", "settings"];
+    const moreBtnEl = document.getElementById("more-menu-btn");
+    if (moreBtnEl) moreBtnEl.classList.toggle("active", hiddenScreens.includes(screen));
     // Tee näkymäkohtainen päivitys
     if (screen === "galaxy") renderGalaxy();
     if (screen === "grammar") renderGrammarTree();
@@ -342,6 +346,41 @@
     // Teemanappi
     const tt = $("theme-toggle");
     if (tt) tt.onclick = toggleTheme;
+
+    // Mobiilin "Lisää"-bottom-sheet
+    const moreBtn = $("more-menu-btn");
+    const sheet = $("more-sheet");
+    const sheetBack = $("sheet-back");
+    function closeSheet() {
+      if (sheet) sheet.classList.remove("open");
+      if (sheetBack) sheetBack.classList.remove("open");
+    }
+    function openSheet() {
+      if (sheet) sheet.classList.add("open");
+      if (sheetBack) sheetBack.classList.add("open");
+      updateSheetThemeLabel();
+    }
+    function updateSheetThemeLabel() {
+      const label = $("sheet-theme-label");
+      if (!label) return;
+      const cur = document.documentElement.getAttribute("data-theme") || "dark";
+      label.textContent = cur === "dark" ? "Vaihda vaaleaan" : "Vaihda tummaan";
+    }
+    if (moreBtn) moreBtn.onclick = openSheet;
+    if (sheetBack) sheetBack.onclick = closeSheet;
+    if (sheet) {
+      sheet.querySelectorAll(".sheet-item[data-screen]").forEach(btn => {
+        btn.onclick = () => {
+          show(btn.dataset.screen);
+          closeSheet();
+        };
+      });
+      const stt = $("sheet-theme-toggle");
+      if (stt) stt.onclick = () => {
+        toggleTheme();
+        updateSheetThemeLabel();
+      };
+    }
 
     // Etusivu — pika-aloitukset
     $$("[data-quick]").forEach(card => {

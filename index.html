@@ -551,6 +551,57 @@
     .center { text-align: center; }
     .hidden { display: none !important; }
 
+    /* Bottom sheet (mobiilin "Lisää"-valikko) */
+    .sheet-back {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      z-index: 90;
+      backdrop-filter: blur(2px);
+    }
+    .sheet-back.open { display: block; }
+    .sheet {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-1);
+      border-radius: 18px 18px 0 0;
+      border-top: 1px solid var(--line);
+      padding: 14px 14px calc(20px + env(safe-area-inset-bottom));
+      z-index: 100;
+      display: none;
+      animation: slideUp 0.22s ease;
+      max-height: 75vh;
+      overflow-y: auto;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.25);
+    }
+    .sheet.open { display: block; }
+    .sheet-handle {
+      width: 40px; height: 4px;
+      background: var(--line-strong);
+      border-radius: 2px;
+      margin: 0 auto 10px;
+    }
+    .sheet-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 10px;
+      width: 100%;
+      border-radius: 10px;
+      font-size: 16px;
+      text-align: left;
+      color: var(--text);
+      background: transparent;
+      border: none;
+      transition: background 0.12s;
+    }
+    .sheet-item:hover, .sheet-item:active { background: var(--bg-2); }
+    .sheet-item .icon { font-size: 20px; width: 24px; text-align: center; }
+    .sheet-item.active { background: var(--accent-soft); color: var(--accent); }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
     /* Tooltip pallon päällä */
     .tooltip {
       position: absolute;
@@ -862,7 +913,7 @@
       <button class="bottom-nav-item" data-screen="galaxy"><span class="icon">🌌</span>Sanasto</button>
       <button class="bottom-nav-item" data-screen="grammar"><span class="icon">🧬</span>Rakenne</button>
       <button class="bottom-nav-item" data-screen="practice"><span class="icon">✏️</span>Harjoitus</button>
-      <button class="bottom-nav-item" data-screen="conversation"><span class="icon">💬</span>Chat</button>
+      <button class="bottom-nav-item" id="more-menu-btn"><span class="icon">⋯</span>Lisää</button>
     </nav>
   </div>
 
@@ -918,6 +969,17 @@
       </div>
       <div class="muted mt-16" id="m-progress" style="font-size:12px;">SRS: – / Hallinta: –</div>
     </div>
+  </div>
+
+  <!-- ===== Lisää-valikko (mobile bottom sheet) ===== -->
+  <div class="sheet-back" id="sheet-back"></div>
+  <div class="sheet" id="more-sheet" role="dialog" aria-label="Lisävalikko">
+    <div class="sheet-handle"></div>
+    <button class="sheet-item" data-screen="speak"><span class="icon">🎙️</span> Lue ääneen</button>
+    <button class="sheet-item" data-screen="conversation"><span class="icon">💬</span> Keskustele</button>
+    <button class="sheet-item" data-screen="stats"><span class="icon">📊</span> Edistyminen</button>
+    <button class="sheet-item" data-screen="settings"><span class="icon">⚙️</span> Asetukset</button>
+    <button class="sheet-item" id="sheet-theme-toggle"><span class="icon">🎨</span> <span id="sheet-theme-label">Vaihda teema</span></button>
   </div>
 
   <!-- Datatiedostot -->
