@@ -74,14 +74,16 @@
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     const ns = "http://www.w3.org/2000/svg";
 
-    // Taustan glow-tähdet
+    // Taustan glow-tähdet — väri teema-tietoisesti
+    const starRgb = getComputedStyle(document.documentElement)
+      .getPropertyValue("--star-color").trim() || "255,255,255";
     const stars = document.createElementNS(ns, "g");
     for (let i = 0; i < 60; i++) {
       const c = document.createElementNS(ns, "circle");
       c.setAttribute("cx", Math.random() * W);
       c.setAttribute("cy", Math.random() * H);
       c.setAttribute("r", Math.random() * 0.9 + 0.2);
-      c.setAttribute("fill", "rgba(255,255,255," + (0.10 + Math.random() * 0.18) + ")");
+      c.setAttribute("fill", "rgba(" + starRgb + "," + (0.10 + Math.random() * 0.18) + ")");
       stars.appendChild(c);
     }
     svg.appendChild(stars);

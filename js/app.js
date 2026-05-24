@@ -8,6 +8,29 @@
   function $(id) { return document.getElementById(id); }
   function $$(sel) { return Array.from(document.querySelectorAll(sel)); }
 
+  // ----- Teema (vaalea / tumma) -------------------------------
+  const THEME_KEY = "kieli.theme";
+  function getStoredTheme() {
+    try { return localStorage.getItem(THEME_KEY) || "dark"; }
+    catch (e) { return "dark"; }
+  }
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+    // Päivitä galaksi jos auki, koska tähtien väri riippuu teemasta
+    const galaxyOpen = document.getElementById("screen-galaxy")?.classList.contains("active");
+    if (galaxyOpen && window.GALAXY) {
+      const svg = document.getElementById("galaxy-svg");
+      if (svg) window.GALAXY.render(svg);
+    }
+  }
+  // Aseta teema heti, ennen näyttöjen renderöintiä
+  applyTheme(getStoredTheme());
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute("data-theme") || "dark";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  }
+
   // ----- Reititys ---------------------------------------------
   function show(screen) {
     screens.forEach(s => {
@@ -315,6 +338,10 @@
     $$(".nav-item, .bottom-nav-item").forEach(b => {
       b.addEventListener("click", () => show(b.dataset.screen));
     });
+
+    // Teemanappi
+    const tt = $("theme-toggle");
+    if (tt) tt.onclick = toggleTheme;
 
     // Etusivu — pika-aloitukset
     $$("[data-quick]").forEach(card => {
