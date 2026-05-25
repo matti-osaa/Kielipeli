@@ -76,6 +76,33 @@ js/
   app.js                  — Reititys ja UI-liima
 ```
 
+## Sanaston laajennus (LLM-generointi)
+
+Sovelluksessa on `scripts/generate-vocab.js` -skripti, joka käyttää Anthropic-API:a generoidakseen sanastoa tavoitemäärään asti (oletus 5000).
+
+```bash
+# Käyttö
+export ANTHROPIC_API_KEY=sk-ant-...
+node scripts/generate-vocab.js                # generoi kohti 5000:tta
+node scripts/generate-vocab.js --target=2500  # tai pienempi tavoite
+node scripts/generate-vocab.js --resume       # jatka aiemmasta snapshotista
+
+# Argumentit
+--target=N      Tavoitemäärä sanoja yhteensä (oletus 5000)
+--batch=N       Sanoja per API-kutsu (oletus 25)
+--model=NAME    Mallin nimi (oletus claude-haiku-4-5-20251001)
+--resume        Jatka edellisestä snapshotista
+```
+
+Skripti tallentaa lopputuloksen `data/words_generated.js`-tiedostoon. Lisää sen
+script-tagi `index.html`:ään muiden words-tiedostojen jälkeen. Snapshot tallennetaan
+joka 5. erän jälkeen tiedostoon `.vocab-snapshot.json`, jotta keskeytetty ajo voi
+jatkua. Kustannus täydellä 5000:n generoinnilla on noin **$4 (Claude Haiku 4.5)**
+ja kestää 10–30 min.
+
+Lopputulos kannattaa silmäillä — automaattikäännökset ovat enimmäkseen hyviä mutta
+ei aukottomia.
+
 ## Status
 
 v0.3. Sanasto 896, kolme kielioppipuuta (en 34 solmua, sv 16, fi 18). Rakennenäkymä noudattaa kohdekieltä — vaihda Asetuksista. Etusivulla "Päivän kielioppi" -kortti suosittelee heikoimman rakenteen. Sanakortissa lausetason TTS.
